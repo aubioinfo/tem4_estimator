@@ -1,1 +1,32 @@
-<!-- 文件夹创建用 -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>英语专四估分工具</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>英语专四估分器</h1>
+    <div id="estimator" style="display: none;">
+      <label>请输入总预估分（满分100）：</label>
+      <input type="number" id="totalEstimate" />
+      <button onclick="estimateScore()">📈 估算最终成绩</button>
+      <div class="result" id="resultBox"></div>
+    </div>
+  </div>
+
+  <div id="pay-overlay">
+    <div class="overlay-card">
+      <h3>请扫码支付 ¥0.99 解锁 3 次估分</h3>
+      <img src="https://raw.githubusercontent.com/aubioinfo/tem4_estimator/main/alipay_qr.png" alt="支付宝收款码" />
+      <p>支付后联系作者小红书：604003678 获取授权码</p>
+      <input id="codeInput" placeholder="请输入授权码" />
+      <button onclick="validateCode()">提交授权码</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
