@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>英语专四估分小工具</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      padding: 20px;
+      margin: 0 auto;
+      max-width: 700px;
+      line-height: 1.6;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+      font-weight: 600;
+    }
+
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: 500;
+      color: #2c3e50;
+    }
+
+    input, button, select {
+      padding: 12px;
+      width: 100%;
+      margin-top: 8px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    input:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+      outline: none;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin-top: 15px;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .centered-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      max-width: 500px;
+      margin: 20px auto;
+    }
+
+    .result, .card {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .score-card {
+      background: white;
+      border-radius: 10px;
+      padding: 25px;
+      margin: 15px 0;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .score-table {
+      width: 100%;
+      max-width: 300px;
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
+
+    .score-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    .score-table td:last-child {
+      text-align: right;
+      font-weight: bold;
+    }
+
+    .final-score {
+      font-size: 1.8em;
+      color: #3498db;
+      margin: 15px 0;
+      font-weight: 600;
+    }
+
+    .share-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 25px 0;
+    }
+
+    .share-btn {
+      padding: 10px 20px;
+      font-size: 15px;
+      width: auto;
+      border-radius: 30px;
+    }
+
+    .wechat-btn {
+      background-color: #07C160;
+    }
+
+    .copy-btn {
+      background-color: #9b59b6;
+    }
+
+    .error {
+      color: #e74c3c;
+      font-size: 13px;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 30px auto;
+      display: none;
+    }
+
+    .section {
+      margin-top: 40px;
+      padding-top: 25px;
+      border-top: 2px dashed #e0e0e0;
+    }
+
+    .footer-note {
+      font-size: 12px;
+      color: #95a5a6;
+      margin-top: 25px;
+      line-height: 1.5;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 15px;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+      
+      input, button, select {
+        padding: 10px;
+      }
+      
+      .score-card {
+        padding: 20px 15px;
+      }
+      
+      .share-buttons {
+        flex-direction: column;
+        gap: 8px;
+      }
+      
+      .share-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>英语专四估分器</h1>
+
+  <label for="modeSelect">请选择估分方式：</label>
+  <select id="modeSelect" onchange="toggleMode()">
+    <option value="byModule">按题型估分</option>
+    <option value="byTotal">直接输入总分</option>
+  </select>
+
+  <div id="moduleMode">
+    <label for="dictation">听写题（10分）：</label>
+    <input type="number" id="dictation" min="0" max="10" placeholder="如：8">
+    <div class="error" id="dictationError">请输入0-10之间的分数</div>
+
+    <label for="listeningLecture">听力讲座（10分）：</label>
+    <input type="number" id="listeningLecture" min="0" max="10" placeholder="如：7">
+    <div class="error" id="listeningLectureError">请输入0-10之间的分数</div>
+
+    <label for="listeningChoice">听力选择题（10分）：</label>
+    <input type="number" id="listeningChoice" min="0" max="10" placeholder="如：8">
+    <div class="error" id="listeningChoiceError">请输入0-10之间的分数</div>
+
+    <label for="languageKnowledge">语言知识（20分）：</label>
+    <input type="number" id="languageKnowledge" min="0" max="20" placeholder="如：15">
+    <div class="error" id="languageKnowledgeError">请输入0-20之间的分数</div>
+
+    <label for="cloze">完形填空（10分）：</label>
+    <input type="number" id="cloze" min="0" max="10" placeholder="如：7">
+    <div class="error" id="clozeError">请输入0-10之间的分数</div>
+
+    <label for="reading">阅读题（20分）：</label>
+    <input type="number" id="reading" min="0" max="20" placeholder="如：16">
+    <div class="error" id="readingError">请输入0-20之间的分数</div>
+
+    <label for="writing">写作题（20分）：</label>
+    <input type="number" id="writing" min="0" max="20" placeholder="如：14">
+    <div class="error" id="writingError">请输入0-20之间的分数</div>
+
+    <button onclick="validateAndCalculate()">📊 计算最终分数</button>
+    <button onclick="validateAndGenerateCard()">🎴 生成分享卡片</button>
+  </div>
+
+  <div class="section" id="totalMode" style="display: none;">
+    <label for="totalEstimate">请输入你的总预估分（满分100）：</label>
+    <input type="number" id="totalEstimate" min="0" max="100" placeholder="如：65">
+    <div class="error" id="totalEstimateError">请输入0-100之间的分数</div>
+    <button onclick="validateAndCalculateFromTotal()">📈 估算最终成绩</button>
+    <button onclick="validateAndGenerateCardFromTotal()">🎴 生成分享卡片</button>
+  </div>
+
+  <div class="loader" id="loader"></div>
+  
+  <div class="centered-container">
+    <div class="result" id="output" style="display: none;"></div>
+    <div class="card" id="card" style="display: none;"></div>
+  </div>
+
+  <script>
+    // 题型配置
+    const questionTypes = {
+      dictation: { max: 10, name: "听写题", errorId: "dictationError" },
+      listeningLecture: { max: 10, name: "听力讲座", errorId: "listeningLectureError" },
+      listeningChoice: { max: 10, name: "听力选择", errorId: "listeningChoiceError" },
+      languageKnowledge: { max: 20, name: "语言知识", errorId: "languageKnowledgeError" },
+      cloze: { max: 10, name: "完形填空", errorId: "clozeError" },
+      reading: { max: 20, name: "阅读题", errorId: "readingError" },
+      writing: { max: 20, name: "写作题", errorId: "writingError" }
+    };
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      // 实时输入验证
+      document.querySelectorAll('input[type="number"]').forEach(input => {
+        input.addEventListener('input', function() {
+          const max = parseInt(this.max);
+          const value = parseInt(this.value) || 0;
+          const errorId = this.id + "Error";
+          const errorElement = document.getElementById(errorId);
+          
+          if (value > max) {
+            errorElement.style.display = "block";
+            this.style.borderColor = "#e74c3c";
+          } else {
+            errorElement.style.display = "none";
+            this.style.borderColor = value > 0 ? "#2ecc71" : "#ddd";
+          }
+        });
+      });
+    });
+
+    function toggleMode() {
+      const mode = document.getElementById("modeSelect").value;
+      document.getElementById("moduleMode").style.display = mode === "byModule" ? "block" : "none";
+      document.getElementById("totalMode").style.display = mode === "byTotal" ? "block" : "none";
+      resetResults();
+    }
+
+    function resetResults() {
+      document.getElementById("output").style.display = "none";
+      document.getElementById("card").style.display = "none";
+    }
+
+    function showLoader(show) {
+      document.getElementById("loader").style.display = show ? "block" : "none";
+    }
+
+    function validateInput(inputId, maxScore, errorId) {
+      const input = document.getElementById(inputId);
+      const value = parseFloat(input.value);
+      const errorElement = document.getElementById(errorId);
+      
+      if (isNaN(value) || value < 0 || value > maxScore) {
+        errorElement.style.display = "block";
+        input.style.borderColor = "#e74c3c";
+        return false;
+      }
+      
+      errorElement.style.display = "none";
+      input.style.borderColor = value > 0 ? "#2ecc71" : "#ddd";
+      return true;
+    }
+
+    function validateAllModules() {
+      let isValid = true;
+      
+      for (const [type, info] of Object.entries(questionTypes)) {
+        if (!validateInput(type, info.max, info.errorId)) {
+          isValid = false;
+        }
+      }
+      
+      return isValid;
+    }
+
+    function validateTotalInput() {
+      return validateInput("totalEstimate", 100, "totalEstimateError");
+    }
+
+    function validateAndCalculate() {
+      if (validateAllModules()) {
+        showLoader(true);
+        setTimeout(() => {
+          calculateFinalScore();
+          showLoader(false);
+        }, 500);
+      }
+    }
+
+    function validateAndGenerateCard() {
+      if (validateAllModules()) {
+        showLoader(true);
+        setTimeout(() => {
+          generateCard();
+          showLoader(false);
+        }, 500);
+      }
+    }
+
+    function validateAndCalculateFromTotal() {
+      if (validateTotalInput()) {
+        showLoader(true);
+        setTimeout(() => {
+          calculateFromTotal();
+          showLoader(false);
+        }, 500);
+      }
+    }
+
+    function validateAndGenerateCardFromTotal() {
+      if (validateTotalInput()) {
+        showLoader(true);
+        setTimeout(() => {
+          generateCardFromTotal();
+          showLoader(false);
+        }, 500);
+      }
+    }
+
+    function calculateFinalScore() {
+      let estimatedScore = 0;
+      
+      for (const type of Object.keys(questionTypes)) {
+        estimatedScore += parseFloat(document.getElementById(type).value) || 0;
+      }
+
+      const finalScore = calculateFinalScoreFromRaw(estimatedScore);
+      displayResult(estimatedScore, finalScore);
+    }
+
+    function calculateFromTotal() {
+      const total = parseFloat(document.getElementById("totalEstimate").value);
+      const finalScore = calculateFinalScoreFromRaw(total);
+      displayResult(total, finalScore);
+    }
+
+    function calculateFinalScoreFromRaw(rawScore) {
+      const X = 100 - rawScore;
+      return Math.round(0.7 * (140 - X) * 10) / 10;
+    }
+
+    function displayResult(rawScore, finalScore) {
+      const output = document.getElementById("output");
+      output.style.display = "block";
+      output.innerHTML = `
+        <div class="score-card">
+          <h3>📝 原始总分: ${rawScore}/100</h3>
+          <div class="final-score">🎯 预测成绩: ${finalScore}</div>
+          <p style="color: #7f8c8d;">最终成绩以官方公布为准</p>
+        </div>
+      `;
+      
+      // 平滑滚动到结果位置
+      setTimeout(() => {
+        output.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+
+    function generateCard() {
+      let estimatedScore = 0;
+      let tableRows = '';
+      
+      for (const [type, info] of Object.entries(questionTypes)) {
+        const score = parseFloat(document.getElementById(type).value) || 0;
+        estimatedScore += score;
+        tableRows += `
+          <tr>
+            <td>${info.name}:</td>
+            <td>${score}/${info.max}</td>
+          </tr>
+        `;
+      }
+
+      const finalScore = calculateFinalScoreFromRaw(estimatedScore);
+      
+      const cardContent = `
+        <div class="score-card">
+          <h2>🎓 我的专四估分卡</h2>
+          
+          <table class="score-table">
+            ${tableRows}
+          </table>
+          
+          <hr style="border-top: 1px solid #eee; margin: 20px 0;">
+          
+          <h3 style="margin-bottom: 5px;">原始总分: ${estimatedScore}/100</h3>
+          <div class="final-score">预测成绩: ${finalScore}</div>
+          
+          <div class="share-buttons">
+            <button onclick="shareToWechat()" class="share-btn wechat-btn">微信分享</button>
+            <button onclick="copyXHS()" class="share-btn copy-btn">复制小红书号</button>
+          </div>
+          
+          <p class="footer-note">
+            工具作者: 曦曦 | 小红书: 604003678<br>
+            <a href="https://github.com/aubioinfo/tem4-estimator/issues" 
+               target="_blank"
+               style="color: #3498db; text-decoration: none;">
+              问题反馈
+            </a>
+          </p>
+        </div>
+      `;
+      
+      displayCard(cardContent);
+    }
+
+    function generateCardFromTotal() {
+      const total = parseFloat(document.getElementById("totalEstimate").value);
+      const finalScore = calculateFinalScoreFromRaw(total);
+      
+      const cardContent = `
+        <div class="score-card">
+          <h2>🎓 我的专四估分卡</h2>
+          
+          <h3 style="margin: 20px 0;">总预估分: ${total}/100</h3>
+          
+          <hr style="border-top: 1px solid #eee; margin: 20px 0;">
+          
+          <div class="final-score">预测成绩: ${finalScore}</div>
+          
+          <div class="share-buttons">
+            <button onclick="shareToWechat()" class="share-btn wechat-btn">微信分享</button>
+            <button onclick="copyXHS()" class="share-btn copy-btn">复制小红书号</button>
+          </div>
+          
+          <p class="footer-note">
+            工具作者: 曦曦 | 小红书: 604003678<br>
+            <a href="https://github.com/aubioinfo/tem4-estimator/issues" 
+               target="_blank"
+               style="color: #3498db; text-decoration: none;">
+              问题反馈
+            </a>
+          </p>
+        </div>
+      `;
+      
+      displayCard(cardContent);
+    }
+
+    function displayCard(content) {
+      const card = document.getElementById("card");
+      card.style.display = "block";
+      card.innerHTML = content;
+      
+      // 平滑滚动到卡片位置
+      setTimeout(() => {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+
+    function shareToWechat() {
+      alert("请点击微信右上角分享按钮\n或复制链接分享：\n" + window.location.href);
+    }
+
+    function copyXHS() {
+      const text = "604003678";
+      navigator.clipboard.writeText(text).then(() => {
+        alert("小红书号已复制到剪贴板！");
+      }).catch(() => {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+        alert("已手动复制小红书号: 604003678");
+      });
+    }
+  </script>
+</body>
+</html>
