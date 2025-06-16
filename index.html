@@ -128,8 +128,8 @@
       border-radius: 30px;
     }
 
-    .wechat-btn {
-      background-color: #07C160;
+    .save-btn {
+      background-color: #FF9500;
     }
 
     .copy-btn {
@@ -262,6 +262,9 @@
     <div class="card" id="card" style="display: none;"></div>
   </div>
 
+  <!-- 引入html2canvas库 -->
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  
   <script>
     // 题型配置
     const questionTypes = {
@@ -440,7 +443,7 @@
       const finalScore = calculateFinalScoreFromRaw(estimatedScore);
       
       const cardContent = `
-        <div class="score-card">
+        <div class="score-card" id="card-content">
           <h2>🎓 我的专四估分卡</h2>
           
           <table class="score-table">
@@ -453,7 +456,7 @@
           <div class="final-score">预测成绩: ${finalScore}</div>
           
           <div class="share-buttons">
-            <button onclick="shareToWechat()" class="share-btn wechat-btn">微信分享</button>
+            <button onclick="saveAsImage()" class="share-btn save-btn">保存图片</button>
             <button onclick="copyXHS()" class="share-btn copy-btn">复制小红书号</button>
           </div>
           
@@ -476,7 +479,7 @@
       const finalScore = calculateFinalScoreFromRaw(total);
       
       const cardContent = `
-        <div class="score-card">
+        <div class="score-card" id="card-content">
           <h2>🎓 我的专四估分卡</h2>
           
           <h3 style="margin: 20px 0;">总预估分: ${total}/100</h3>
@@ -486,7 +489,7 @@
           <div class="final-score">预测成绩: ${finalScore}</div>
           
           <div class="share-buttons">
-            <button onclick="shareToWechat()" class="share-btn wechat-btn">微信分享</button>
+            <button onclick="saveAsImage()" class="share-btn save-btn">保存图片</button>
             <button onclick="copyXHS()" class="share-btn copy-btn">复制小红书号</button>
           </div>
           
@@ -515,8 +518,28 @@
       }, 100);
     }
 
-    function shareToWechat() {
-      alert("请点击微信右上角分享按钮\n或复制链接分享：\n" + window.location.href);
+    // 保存为图片功能
+    function saveAsImage() {
+      const cardContent = document.getElementById("card-content");
+      showLoader(true);
+      
+      html2canvas(cardContent, {
+        scale: 2, // 提高图片质量
+        logging: false,
+        useCORS: true,
+        allowTaint: true
+      }).then(canvas => {
+        // 创建下载链接
+        const link = document.createElement('a');
+        link.download = '专四估分结果.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showLoader(false);
+      }).catch(err => {
+        console.error('保存图片出错:', err);
+        alert('保存图片失败，请重试或截图保存');
+        showLoader(false);
+      });
     }
 
     function copyXHS() {
