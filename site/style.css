@@ -30,25 +30,3 @@ button {
   font-weight: bold;
   color: #2c3e50;
 }
-#pay-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-}
-.overlay-card {
-  background: #fff;
-  padding: 30px;
-  border-radius: 12px;
-  text-align: center;
-  width: 90%;
-  max-width: 350px;
-}
-.overlay-card img {
-  max-width: 200px;
-  margin: 15px 0;
-}
