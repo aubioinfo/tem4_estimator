@@ -571,8 +571,8 @@
       const orderNumber = document.getElementById('orderNumber').value.trim();
       const errorElement = document.getElementById('orderNumberError');
       
-      // 验证订单号长度是否为28位
-      if (orderNumber.length !== 28) {
+      // 验证订单号长度是否为32位
+      if (orderNumber.length !== 32) {
         errorElement.style.display = 'block';
         return;
       }
@@ -591,8 +591,8 @@
       // 模拟订单验证过程（实际应用中需要后端验证）
       setTimeout(() => {
         // 这里模拟验证过程，实际应用中应该调用后端API验证订单
-        // 微信订单号通常是28位数字，这里我们只验证长度
-        const isValid = orderNumber.length === 28;
+        // 微信订单号通常是32位数字，这里我们只验证长度
+        const isValid = orderNumber.length === 32;
         
         // 隐藏验证动画
         document.getElementById('verificationAnimation').style.display = 'none';
@@ -660,7 +660,7 @@
         const value = this.value.trim();
         const errorElement = document.getElementById('orderNumberError');
         
-        if (value.length > 0 && value.length !== 28) {
+        if (value.length > 0 && value.length !== 32) {
           errorElement.style.display = 'block';
           this.style.borderColor = '#e74c3c';
         } else {
