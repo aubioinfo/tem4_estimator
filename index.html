@@ -316,6 +316,47 @@
       margin-bottom: 10px;
     }
 
+    /* 新增验证动画样式 */
+    .verification-animation {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 60px;
+      margin: 15px 0;
+    }
+    
+    .verification-dot {
+      width: 12px;
+      height: 12px;
+      margin: 0 5px;
+      background-color: #3498db;
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out;
+    }
+    
+    .verification-dot:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+    
+    .verification-dot:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+    
+    .verification-text {
+      margin-top: 10px;
+      color: #7f8c8d;
+      font-size: 14px;
+    }
+
+    @keyframes bounce {
+      0%, 80%, 100% { 
+        transform: scale(0);
+      }
+      40% { 
+        transform: scale(1);
+      }
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -366,18 +407,27 @@
   <div class="payment-modal" id="paymentModal">
     <div class="payment-content">
       <h2>解锁专四估分功能</h2>
-      <p>请使用支付宝扫描下方二维码支付 ¥1.99 解锁估分功能</p>
+      <p>请使用微信扫描下方二维码支付 ¥1.99 解锁估分功能</p>
       
       <div class="payment-qrcode">
-        <!-- 替换为你的支付宝固定金额二维码 -->
-        <img src="https://raw.githubusercontent.com/aubioinfo/tem4_estimator/main/alipay_qr.png" alt="支付宝付款码">
+        <!-- 替换为你的微信固定金额二维码 -->
+        <img src="https://raw.githubusercontent.com/aubioinfo/tem4_estimator/blob/main/wechat_qr2.png" alt="微信付款码">
       </div>
       
-      <p>支付完成后，请输入支付宝订单号进行验证</p>
+      <p>支付完成后，请输入微信订单号进行验证</p>
       
       <div class="order-input-container" id="orderInputContainer">
-        <input type="text" id="orderNumber" placeholder="请输入支付宝订单号" maxlength="32">
+        <input type="text" id="orderNumber" placeholder="请输入32位微信订单号" maxlength="32">
+        <div class="error" id="orderNumberError">请输入正确的32位微信订单号</div>
         <button class="payment-btn verify" onclick="verifyOrderNumber()">提交验证</button>
+      </div>
+      
+      <!-- 验证动画容器 -->
+      <div class="verification-animation" id="verificationAnimation" style="display: none;">
+        <div class="verification-dot"></div>
+        <div class="verification-dot"></div>
+        <div class="verification-dot"></div>
+        <div class="verification-text">正在验证订单号，请稍候...</div>
       </div>
       
       <div class="payment-actions">
@@ -498,11 +548,17 @@
       document.getElementById('paymentModal').style.display = 'flex';
       // 显示订单号输入框
       document.getElementById('orderInputContainer').style.display = 'block';
+      // 隐藏验证动画
+      document.getElementById('verificationAnimation').style.display = 'none';
       // 隐藏我已支付按钮
       document.getElementById('paymentSuccessBtn').style.display = 'none';
       // 重置状态显示
       document.getElementById('paymentSuccess').style.display = 'none';
       document.getElementById('paymentFailure').style.display = 'none';
+      // 重置错误提示
+      document.getElementById('orderNumberError').style.display = 'none';
+      // 清空输入框
+      document.getElementById('orderNumber').value = '';
     }
     
     // 隐藏支付模态框
@@ -513,30 +569,43 @@
     // 验证订单号
     function verifyOrderNumber() {
       const orderNumber = document.getElementById('orderNumber').value.trim();
+      const errorElement = document.getElementById('orderNumberError');
       
-      if (!orderNumber) {
-        alert('请输入支付宝订单号');
+      // 验证订单号长度是否为28位
+      if (orderNumber.length !== 28) {
+        errorElement.style.display = 'block';
         return;
       }
       
-      // 显示加载状态
+      // 隐藏错误提示
+      errorElement.style.display = 'none';
+      
+      // 显示验证动画
+      document.getElementById('verificationAnimation').style.display = 'flex';
+      // 隐藏订单输入框
+      document.getElementById('orderInputContainer').style.display = 'none';
+      // 隐藏状态信息
       document.getElementById('paymentSuccess').style.display = 'none';
       document.getElementById('paymentFailure').style.display = 'none';
-      showLoader(true);
       
-      // 模拟订单验证（实际应用中需要后端验证）
+      // 模拟订单验证过程（实际应用中需要后端验证）
       setTimeout(() => {
         // 这里模拟验证过程，实际应用中应该调用后端API验证订单
-        const isValid = orderNumber.length >= 10; // 简单模拟验证
+        // 微信订单号通常是28位数字，这里我们只验证长度
+        const isValid = orderNumber.length === 28;
+        
+        // 隐藏验证动画
+        document.getElementById('verificationAnimation').style.display = 'none';
         
         if (isValid) {
           document.getElementById('paymentSuccess').style.display = 'block';
           document.getElementById('paymentSuccessBtn').style.display = 'block';
         } else {
           document.getElementById('paymentFailure').style.display = 'block';
+          // 重新显示订单输入框
+          document.getElementById('orderInputContainer').style.display = 'block';
         }
-        showLoader(false);
-      }, 1500);
+      }, 2000); // 模拟2秒的验证过程
     }
     
     // 解锁功能
@@ -584,6 +653,20 @@
             this.style.borderColor = value > 0 ? "#2ecc71" : "#ddd";
           }
         });
+      });
+      
+      // 微信订单号输入验证
+      document.getElementById('orderNumber').addEventListener('input', function() {
+        const value = this.value.trim();
+        const errorElement = document.getElementById('orderNumberError');
+        
+        if (value.length > 0 && value.length !== 28) {
+          errorElement.style.display = 'block';
+          this.style.borderColor = '#e74c3c';
+        } else {
+          errorElement.style.display = 'none';
+          this.style.borderColor = '#ddd';
+        }
       });
     });
 
