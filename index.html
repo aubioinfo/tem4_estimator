@@ -167,6 +167,155 @@
       line-height: 1.5;
     }
 
+    /* 新增支付相关样式 */
+    .payment-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .payment-content {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 0.3s;
+    }
+    
+    .payment-content h2 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+    
+    .payment-content p {
+      margin-bottom: 25px;
+      color: #7f8c8d;
+    }
+    
+    .payment-qrcode {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 20px;
+      border: 1px solid #eee;
+      padding: 10px;
+      background-color: white;
+    }
+    
+    .payment-qrcode img {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .payment-actions {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .payment-btn {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+    
+    .payment-btn:hover {
+      background-color: #2980b9;
+    }
+    
+    .payment-btn.cancel {
+      background-color: #e74c3c;
+    }
+    
+    .payment-btn.cancel:hover {
+      background-color: #c0392b;
+    }
+    
+    .payment-btn.success {
+      background-color: #2ecc71;
+    }
+    
+    .payment-btn.success:hover {
+      background-color: #27ae60;
+    }
+    
+    .payment-btn.verify {
+      background-color: #FF9500;
+    }
+    
+    .payment-btn.verify:hover {
+      background-color: #e68600;
+    }
+    
+    .payment-status {
+      margin-top: 15px;
+      font-weight: bold;
+      display: none;
+    }
+    
+    .payment-success {
+      color: #2ecc71;
+    }
+    
+    .payment-failure {
+      color: #e74c3c;
+    }
+    
+    .locked-feature {
+      position: relative;
+    }
+    
+    .locked-feature::after {
+      content: "🔒 请先解锁功能";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.85);
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #e74c3c;
+      font-weight: bold;
+      font-size: 16px;
+      border-radius: 6px;
+    }
+    
+    .unlock-btn {
+      background-color: #FF9500;
+      margin-top: 15px;
+    }
+    
+    .unlock-btn:hover {
+      background-color: #e68600;
+    }
+    
+    .order-input-container {
+      margin: 20px 0;
+      display: none;
+    }
+    
+    .order-input-container input {
+      margin-bottom: 10px;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -207,6 +356,44 @@
 </head>
 <body>
   <h1>英语专四估分器</h1>
+
+  <!-- 支付解锁按钮 -->
+  <div class="centered-container">
+    <button class="unlock-btn" onclick="showPaymentModal()">🔓 解锁估分功能 (¥1.99)</button>
+  </div>
+
+  <!-- 支付模态框 -->
+  <div class="payment-modal" id="paymentModal">
+    <div class="payment-content">
+      <h2>解锁专四估分功能</h2>
+      <p>请使用支付宝扫描下方二维码支付 ¥1.99 解锁估分功能</p>
+      
+      <div class="payment-qrcode">
+        <!-- 替换为你的支付宝固定金额二维码 -->
+        <img src="https://raw.githubusercontent.com/aubioinfo/tem4_estimator/main/alipay_qr.png" alt="支付宝付款码">
+      </div>
+      
+      <p>支付完成后，请输入支付宝订单号进行验证</p>
+      
+      <div class="order-input-container" id="orderInputContainer">
+        <input type="text" id="orderNumber" placeholder="请输入支付宝订单号" maxlength="32">
+        <button class="payment-btn verify" onclick="verifyOrderNumber()">提交验证</button>
+      </div>
+      
+      <div class="payment-actions">
+        <button class="payment-btn success" id="paymentSuccessBtn" style="display: none;" onclick="unlockFeatures()">我已支付</button>
+        <button class="payment-btn cancel" onclick="hidePaymentModal()">取消支付</button>
+      </div>
+      
+      <div class="payment-status payment-success" id="paymentSuccess">
+        订单验证成功！请点击"我已支付"按钮解锁功能
+      </div>
+      
+      <div class="payment-status payment-failure" id="paymentFailure">
+        订单验证失败，请确认订单号是否正确
+      </div>
+    </div>
+  </div>
 
   <label for="modeSelect">请选择估分方式：</label>
   <select id="modeSelect" onchange="toggleMode()">
@@ -266,7 +453,107 @@
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   
   <script>
-    // 题型配置
+    // 支付功能相关代码
+    let isUnlocked = localStorage.getItem('tem4ToolUnlocked') === 'true';
+    
+    // 检查是否已解锁
+    function checkUnlockStatus() {
+      const unlockBtn = document.querySelector('.unlock-btn');
+      if (isUnlocked) {
+        if (unlockBtn) unlockBtn.style.display = 'none';
+        enableAllFeatures();
+      } else {
+        disableAllFeatures();
+      }
+    }
+    
+    // 启用所有功能
+    function enableAllFeatures() {
+      document.querySelectorAll('#moduleMode button, #totalMode button').forEach(btn => {
+        btn.disabled = false;
+        btn.classList.remove('locked-feature');
+      });
+      document.querySelectorAll('#moduleMode input, #totalMode input').forEach(input => {
+        input.disabled = false;
+        input.classList.remove('locked-feature');
+      });
+      document.getElementById('modeSelect').disabled = false;
+    }
+    
+    // 禁用所有功能
+    function disableAllFeatures() {
+      document.querySelectorAll('#moduleMode button, #totalMode button').forEach(btn => {
+        btn.disabled = true;
+        btn.classList.add('locked-feature');
+      });
+      document.querySelectorAll('#moduleMode input, #totalMode input').forEach(input => {
+        input.disabled = true;
+        input.classList.add('locked-feature');
+      });
+      document.getElementById('modeSelect').disabled = true;
+    }
+    
+    // 显示支付模态框
+    function showPaymentModal() {
+      document.getElementById('paymentModal').style.display = 'flex';
+      // 显示订单号输入框
+      document.getElementById('orderInputContainer').style.display = 'block';
+      // 隐藏我已支付按钮
+      document.getElementById('paymentSuccessBtn').style.display = 'none';
+      // 重置状态显示
+      document.getElementById('paymentSuccess').style.display = 'none';
+      document.getElementById('paymentFailure').style.display = 'none';
+    }
+    
+    // 隐藏支付模态框
+    function hidePaymentModal() {
+      document.getElementById('paymentModal').style.display = 'none';
+    }
+    
+    // 验证订单号
+    function verifyOrderNumber() {
+      const orderNumber = document.getElementById('orderNumber').value.trim();
+      
+      if (!orderNumber) {
+        alert('请输入支付宝订单号');
+        return;
+      }
+      
+      // 显示加载状态
+      document.getElementById('paymentSuccess').style.display = 'none';
+      document.getElementById('paymentFailure').style.display = 'none';
+      showLoader(true);
+      
+      // 模拟订单验证（实际应用中需要后端验证）
+      setTimeout(() => {
+        // 这里模拟验证过程，实际应用中应该调用后端API验证订单
+        const isValid = orderNumber.length >= 10; // 简单模拟验证
+        
+        if (isValid) {
+          document.getElementById('paymentSuccess').style.display = 'block';
+          document.getElementById('paymentSuccessBtn').style.display = 'block';
+        } else {
+          document.getElementById('paymentFailure').style.display = 'block';
+        }
+        showLoader(false);
+      }, 1500);
+    }
+    
+    // 解锁功能
+    function unlockFeatures() {
+      isUnlocked = true;
+      localStorage.setItem('tem4ToolUnlocked', 'true');
+      localStorage.setItem('unlockTimestamp', Date.now().toString());
+      
+      hidePaymentModal();
+      const unlockBtn = document.querySelector('.unlock-btn');
+      if (unlockBtn) unlockBtn.style.display = 'none';
+      enableAllFeatures();
+      
+      alert('功能已解锁！现在可以使用估分功能了。');
+    }
+    
+    // 原有题型配置
     const questionTypes = {
       dictation: { max: 10, name: "听写题", errorId: "dictationError" },
       listeningLecture: { max: 10, name: "听力讲座", errorId: "listeningLectureError" },
@@ -279,6 +566,8 @@
 
     // 初始化
     document.addEventListener('DOMContentLoaded', function() {
+      checkUnlockStatus();
+      
       // 实时输入验证
       document.querySelectorAll('input[type="number"]').forEach(input => {
         input.addEventListener('input', function() {
@@ -347,6 +636,11 @@
     }
 
     function validateAndCalculate() {
+      if (!isUnlocked) {
+        showPaymentModal();
+        return;
+      }
+      
       if (validateAllModules()) {
         showLoader(true);
         setTimeout(() => {
@@ -357,6 +651,11 @@
     }
 
     function validateAndGenerateCard() {
+      if (!isUnlocked) {
+        showPaymentModal();
+        return;
+      }
+      
       if (validateAllModules()) {
         showLoader(true);
         setTimeout(() => {
@@ -367,6 +666,11 @@
     }
 
     function validateAndCalculateFromTotal() {
+      if (!isUnlocked) {
+        showPaymentModal();
+        return;
+      }
+      
       if (validateTotalInput()) {
         showLoader(true);
         setTimeout(() => {
@@ -377,6 +681,11 @@
     }
 
     function validateAndGenerateCardFromTotal() {
+      if (!isUnlocked) {
+        showPaymentModal();
+        return;
+      }
+      
       if (validateTotalInput()) {
         showLoader(true);
         setTimeout(() => {
@@ -494,7 +803,7 @@
           </div>
           
           <p class="footer-note">
-            工具作者: 曦曦（英专资料free）| 小红书: 604003678<br>
+            工具作者: 曦曦 | 小红书: 604003678<br>
             <a href="https://github.com/aubioinfo/tem4-estimator/issues" 
                target="_blank"
                style="color: #3498db; text-decoration: none;">
