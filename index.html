@@ -902,11 +902,33 @@
       displayResult(total, finalScore);
     }
 
-    function calculateFinalScoreFromRaw(rawScore) {
-      const X = 100 - rawScore;
-      const randomOffset = ((rawScore * 12345) % 6 + 1) * 0.1; // 0.1-0.6，步长0.1
-      const adjustedX = X + randomOffset;
-      return Math.round(0.7 * (140 - adjustedX) * 10) / 10;
+    /**
+ * 生成确定性随机数 (0.1-1.0，步长0.1)
+ * @param {number} rawScore 原始分数
+ * @returns {number} 0.1, 0.2, ..., 1.0
+ */
+function deterministicRandom(rawScore) {
+  // 1. 将分数转换为字符串并计算哈希
+  const str = rawScore.toString();
+  let hash = 5381; // 初始哈希种子 (DJB2算法)
+  
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 33) ^ str.charCodeAt(i); // DJB2哈希算法
+  }
+  
+  // 2. 映射到0.1-1.0（步长0.1）
+  const scaled = ((Math.abs(hash) % 10) + 1) * 0.1; // 1-10 → 0.1-1.0
+  return Math.round(scaled * 10) / 10; // 确保精确到小数点后1位
+}
+
+/**
+ * 计算最终分数（带随机修正）
+ */
+function calculateFinalScoreFromRaw(rawScore) {
+  const X = 100 - rawScore;
+  const randomOffset = deterministicRandom(rawScore); // 确定性随机数
+  const adjustedX = X + randomOffset;
+  return Math.round(0.7 * (140 - adjustedX) * 10) / 10;
 }
     function displayResult(rawScore, finalScore) {
       const output = document.getElementById("output");
