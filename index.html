@@ -902,34 +902,30 @@
       displayResult(total, finalScore);
     }
 
-    /**
- * 生成确定性随机数 (0.1-1.0，步长0.1)
- * @param {number} rawScore 原始分数
- * @returns {number} 0.1, 0.2, ..., 1.0
- */
-function deterministicRandom(rawScore) {
-  // 1. 将分数转换为字符串并计算哈希
-  const str = rawScore.toString();
-  let hash = 5381; // 初始哈希种子 (DJB2算法)
-  
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash * 33) ^ str.charCodeAt(i); // DJB2哈希算法
-  }
-  
-  // 2. 映射到0.1-1.0（步长0.1）
-  const scaled = ((Math.abs(hash) % 10) + 1) * 0.1; // 1-10 → 0.1-1.0
-  return Math.round(scaled * 10) / 10; // 确保精确到小数点后1位
-}
+/* 修改后的随机数生成函数 */
+    function deterministicRandom(rawScore) {
+      const str = rawScore.toString();
+      let hash = 5381;
+      
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash * 33) ^ str.charCodeAt(i);
+      }
+      
+      // 修改为生成-0.5到+0.5的随机偏移量
+      const scaled = ((Math.abs(hash) % 11) - 5) / 10; // -0.5到+0.5
+      return Math.round(scaled * 10) / 10; // 确保精确到小数点后1位
+    }
 
-/**
- * 计算最终分数（带随机修正）
- */
-function calculateFinalScoreFromRaw(rawScore) {
-  const X = 100 - rawScore;
-  const randomOffset = deterministicRandom(rawScore); // 确定性随机数
-  const adjustedX = X + randomOffset;
-  return Math.round(0.7 * (140 - adjustedX) * 10) / 10;
-}
+    /* 修改后的最终分数计算函数 */
+    function calculateFinalScoreFromRaw(rawScore) {
+      const baseScore = 0.7 * (40 + rawScore); // 基础分数计算
+      const randomOffset = deterministicRandom(rawScore); // 获取-0.5到+0.5的随机偏移
+      const finalScore = Math.round((baseScore + randomOffset) * 10) / 10;
+      
+      // 确保分数在合理范围内 (0-100)
+      return Math.max(0, Math.min(100, finalScore));
+    }
+    
     function displayResult(rawScore, finalScore) {
       const output = document.getElementById("output");
       output.style.display = "block";
