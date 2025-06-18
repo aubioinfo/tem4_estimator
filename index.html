@@ -904,9 +904,10 @@
 
     function calculateFinalScoreFromRaw(rawScore) {
       const X = 100 - rawScore;
-      return Math.round(0.7 * (140 - X) * 10) / 10;
-    }
-
+      const randomOffset = ((rawScore * 12345) % 6 + 1) * 0.1; // 0.1-0.6，步长0.1
+      const adjustedX = X + randomOffset;
+      return Math.round(0.7 * (140 - adjustedX) * 10) / 10;
+}
     function displayResult(rawScore, finalScore) {
       const output = document.getElementById("output");
       output.style.display = "block";
